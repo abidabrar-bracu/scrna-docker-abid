@@ -1,0 +1,16 @@
+- version: 1.0.0
+  date: 2025-10-19
+  base: pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime
+  python:
+    - scanpy[leiden]
+    - scvi-tools[cuda]
+    - squidpy[interactive]
+    - spatialdata[extra], spatialdata-plot, spatialdata-io
+    - bbknn, leidenalg, scikit-misc, scib, scib-metrics, scarches, celltypist, scvelo, harmonypy, decoupler, pertpy, liana, spatialde, tangram-sc
+  r:
+    - R 4.4 (CRAN jammy)
+    - Seurat v5.3.0, SeuratObject, seurat-wrappers, seurat-disk, azimuth, seurat-data, signac
+    - rhdf5 (Bioc), BPCells (source), Monocle3 (GitHub), anndataR, IRkernel, harmony
+  notes:
+    - "Fonts: DejaVu + Cairo defaults for Jupyter"
+    - "IRkernel registered system-wide"
