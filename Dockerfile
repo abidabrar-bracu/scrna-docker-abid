@@ -135,6 +135,23 @@ RUN R -q -e "dir.create('/workspace/docs', showWarnings=FALSE); \
   write.table(as.data.frame(installed.packages()[,c('Package','Version')]), \
   file='/workspace/docs/R_versions.tsv', sep='\t', row.names=FALSE, quote=FALSE)"
 
+# --- Cleanup ---
+RUN apt-get clean \
+&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN rm -rf /usr/local/lib/R/site-library/*/help \
+    /usr/local/lib/R/site-library/*/doc \
+    /usr/local/lib/R/site-library/*/html \
+    /usr/local/lib/R/site-library/*/tests \
+    /usr/local/lib/R/site-library/*/demo \
+    /usr/local/lib/R/site-library/*/libs/*.o \
+    /tmp/* /var/tmp/*
+
+RUN rm -rf /usr/share/man /usr/share/doc /usr/share/locale
+
+
+# --- Workspace setup ---
+RUN mkdir -p /workspace && chown -R vscode:vscode /workspace
 USER vscode
 
 # --- Convenience: expose Jupyter default port ---
