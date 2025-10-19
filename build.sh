@@ -43,3 +43,50 @@ docker cp "$CID":/workspace/docs/python_versions.json docs/ || true
 docker cp "$CID":/workspace/docs/R_versions.tsv docs/ || true
 docker rm "$CID" >/dev/null
 echo "📄 Version manifests copied into ./docs/"
+
+# --- Update README.md with collapsible latest versions ---
+PY_JSON="docs/python_versions.json"
+R_TSV="docs/R_versions.tsv"
+README="README.md"
+
+# collapse tags
+START_TAG="<!--VERSIONS_START-->"
+END_TAG="<!--VERSIONS_END-->"
+
+TMP_MD=$(mktemp)
+
+{
+  echo "${START_TAG}"
+  echo ""
+  echo "# Installed library versions (latest build)"
+  echo ""
+  echo "<details><summary><b>Python stack</b></summary>"
+  echo ""
+  echo '```text'
+  jq -r 'to_entries | sort_by(.key)[] | "\(.key): \(.value)"' "${PY_JSON}" 2>/dev/null | column -t || echo "python_versions.json missing"
+  echo '```'
+  echo "</details>"
+  echo ""
+  echo "<details><summary><b>R stack</b></summary>"
+  echo ""
+  echo '```text'
+  (column -t < "${R_TSV}" 2>/dev/null) || echo "R_versions.tsv missing"
+  echo '```'
+  echo "</details>"
+  echo ""
+  echo "${END_TAG}"
+} > "${TMP_MD}"
+
+if grep -q "${START_TAG}" "${README}"; then
+  awk -v start="${START_TAG}" -v end="${END_TAG}" -v newfile="${TMP_MD}" '
+    $0==start {f=1;system("cat " newfile);next}
+    $0==end {f=0;next}
+    !f
+  ' "${README}" > "${README}.new" && mv "${README}.new" "${README}"
+else
+  cat "${TMP_MD}" >> "${README}"
+fi
+
+
+rm "${TMP_MD}"
+echo "✅ README updated with latest package versions"
