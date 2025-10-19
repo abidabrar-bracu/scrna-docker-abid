@@ -2,11 +2,11 @@
 set -euo pipefail
 
 VERSION="${1:-}"
-TARGET="${2:-ghcr}"   # ghcr | dockerhub
+TARGET="${2:-ghcr}"   # ghcr | dockerhub | local
 IMAGE_BASENAME="scanalysis-base"
 
 if [[ -z "${VERSION}" ]]; then
-  echo "Usage: $0 <version> [ghcr|dockerhub]"
+  echo "Usage: $0 <version> [ghcr|dockerhub|local]"
   exit 1
 fi
 
@@ -35,3 +35,11 @@ else
   echo "Unknown target: ${TARGET}"
   exit 1
 fi
+
+# --- extract docs/version info ---
+CID=$(docker create "$IMAGE")
+mkdir -p docs
+docker cp "$CID":/workspace/docs/python_versions.json docs/ || true
+docker cp "$CID":/workspace/docs/R_versions.tsv docs/ || true
+docker rm "$CID" >/dev/null
+echo "📄 Version manifests copied into ./docs/"

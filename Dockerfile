@@ -116,6 +116,25 @@ RUN mkdir -p /home/vscode && \
 RUN R -q -e "pak::pkg_install('IRkernel')"
 RUN R -q -e "IRkernel::installspec(user=FALSE)" 
 
+# --- Version report generation (Python + R) ---
+RUN mkdir -p /workspace/docs && chmod 777 /workspace/docs
+
+# Python version summary (installed package names)
+RUN python - <<'PY'
+import importlib.metadata as metadata, json, os
+
+out = {dist.metadata["Name"]: dist.version for dist in metadata.distributions()}
+os.makedirs("/workspace/docs", exist_ok=True)
+with open("/workspace/docs/python_versions.json", "w") as f:
+    json.dump(out, f, indent=2, sort_keys=True)
+print(f"Wrote {len(out)} Python packages → /workspace/docs/python_versions.json")
+PY
+
+# R version summary
+RUN R -q -e "dir.create('/workspace/docs', showWarnings=FALSE); \
+  write.table(as.data.frame(installed.packages()[,c('Package','Version')]), \
+  file='/workspace/docs/R_versions.tsv', sep='\t', row.names=FALSE, quote=FALSE)"
+
 USER vscode
 
 # --- Convenience: expose Jupyter default port ---
