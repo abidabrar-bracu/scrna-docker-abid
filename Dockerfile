@@ -43,7 +43,7 @@ RUN pip install --no-cache-dir \
     pandas numpy scipy scikit-learn scikit-image statsmodels seaborn matplotlib anndata2ri \
     'scanpy[leiden]' 'squidpy[interactive]' \
     "spatialdata[extra]" spatialdata-plot spatialdata-io\
-    igraph \
+    igraph umap-learn \
     leidenalg \
     bbknn \
     scikit-misc \
@@ -52,6 +52,7 @@ RUN pip install --no-cache-dir \
     celltypist scarches harmonypy \
     scvelo \
     decoupler pertpy liana spatialde tangram-sc \
+    cellxgene-census \
     "scvi-tools[cuda]"
 
 # WARNING: the latest version of AnnData does not have anndata.read, so scarches import can fail.
@@ -87,6 +88,20 @@ RUN R -q -e "pak::pkg_install(c('scverse/anndataR', 'harmony'))"
 RUN R -q -e "pak::pkg_install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats', 'limma', 'lme4', 'S4Vectors', 'SingleCellExperiment', 'SummarizedExperiment', 'batchelor', 'HDF5Array', 'ggrastr'))"
 # Monocle 3 ('cole-trapnell-lab/monocle3')
 RUN R -q -e "pak::pkg_install('cole-trapnell-lab/monocle3')"
+
+# CellChat Dependencies
+RUN R -q -e "pak::pkg_install(c('NMF', 'circlize', 'ComplexHeatmap'))"
+# CellChat
+RUN R -q -e "pak::pkg_install('jinworks/CellChat')"
+
+# kBET
+RUN R -q -e "pak::pkg_install('theislab/kBET')"
+
+# finally CellXGene Census R package
+RUN sed -i '/pkgType/d' /etc/R/Rprofile.site
+RUN R -q -e "install.packages('tiledb', repos = c('https://tiledb-inc.r-universe.dev', 'https://cloud.r-project.org'))"
+RUN R -q -e "install.packages('cellxgene.census', repos=c('https://chanzuckerberg.r-universe.dev', 'https://cloud.r-project.org'))"
+
 
 # --- Fix plotting fonts in jupyter lab ---
 # install font dependencies
