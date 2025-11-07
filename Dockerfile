@@ -1,5 +1,5 @@
-# --- Python + CUDA base (includes conda, PyTorch 2.4.1, CUDA 12.1) ---
-FROM pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime
+# --- Python + CUDA base (includes conda, PyTorch 2.9.0, CUDA 12.8) ---
+FROM pytorch/pytorch:2.9.0-cuda12.8-cudnn9-devel
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Europe/Berlin \
@@ -31,29 +31,55 @@ RUN bash -lc 'set -e; \
     apt-get update && apt-get install -y --no-install-recommends r-base r-base-dev && \
     rm -rf /var/lib/apt/lists/*'
 
+# ------------------------------------------------------------
+#  Install latest code-server
+# ------------------------------------------------------------
+RUN CODE_URL=$(curl -s https://api.github.com/repos/coder/code-server/releases/latest \
+        | grep browser_download_url \
+        | grep linux-amd64.tar.gz \
+        | cut -d '"' -f 4) && \
+        curl -fsSL "$CODE_URL" | tar -xz -C /usr/local --strip-components=1
+
+# ------------------------------------------------------------
+# Create workspace and VS Code directories
+# ------------------------------------------------------------
+RUN mkdir -p /workspace /config/.vscode/extensions
+RUN code-server --install-extension ms-python.python
+RUN code-server --install-extension ms-toolsai.jupyter
+
+
 # --- Create dev user to match devcontainer.json ---
 RUN useradd -m -s /bin/bash vscode && \
     chown -R vscode:vscode /opt/conda
 WORKDIR /workspace
 
 # --- Python packages (GPU-ready) ---
-# torch is already present in the base image (2.4.1 + cu121)
+# --- Base scientific stack ---
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir \
+        numpy==2.3.3 scipy==1.15.3 scikit-learn scikit-image==0.25.2 \
+        statsmodels seaborn matplotlib==3.10.7
+# --- scAnalysis core packages ---
+# pinning numpy/scipy/skimage for compatibility
 RUN pip install --no-cache-dir \
-    jupyterlab notebook ipykernel \
-    pandas numpy scipy scikit-learn scikit-image statsmodels seaborn matplotlib anndata2ri \
-    'scanpy[leiden]' 'squidpy[interactive]' \
-    "spatialdata[extra]" spatialdata-plot spatialdata-io\
-    igraph umap-learn \
-    leidenalg \
-    bbknn \
-    scikit-misc \
-    rpy2 \
-    scib scib-metrics \
-    celltypist scarches harmonypy \
+    numpy==2.3.3 scipy==1.15.3 scikit-learn scikit-image==0.25.2 \
+    rpy2 jupyterlab notebook ipykernel \
+    kiwisolver==1.4.9 vispy napari==0.6.6 \
+    anndata2ri \
+    'scanpy[dask,leiden]==1.11.5' \
+    "dask[distributed,diagnostics]" sklearn-ann annoy \
+    igraph umap-learn leidenalg bbknn scikit-misc \
+    "jax[cuda12]==0.8.0" jaxlib==0.8.0 \
+    "scvi-tools[cuda,autotune,parallel,interpretability,dataloaders]==1.4.0.post1" \
+    scib scib-metrics scarches \
+    "ray[data,train,tune,serve]" \
+    'squidpy[interactive]==1.6.5' \
+    "spatialdata[extra]==0.5.0" \
+    celltypist harmonypy \
     scvelo \
     decoupler pertpy liana spatialde tangram-sc \
     cellxgene-census \
-    "scvi-tools[cuda]"
+    gh
 
 # WARNING: the latest version of AnnData does not have anndata.read, so scarches import can fail.
 # Workaround at runtime:
@@ -107,7 +133,7 @@ RUN R -q -e "install.packages('cellxgene.census', repos=c('https://chanzuckerber
 # install font dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libcairo2-dev libxt-dev libfontconfig1-dev fonts-dejavu \
- && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # R user profile (fonts + ggplot theme)
 RUN mkdir -p /home/vscode && \
@@ -130,6 +156,7 @@ RUN mkdir -p /home/vscode && \
 # --- Register R kernel for Jupyter (also run in postCreate to be sure) ---
 RUN R -q -e "pak::pkg_install('IRkernel')"
 RUN R -q -e "IRkernel::installspec(user=FALSE)" 
+RUN python -m ipykernel install --name scanalysis --display-name "scAnalysis (base)" --prefix=/usr/local
 
 # --- Version report generation (Python + R) ---
 RUN mkdir -p /workspace/docs && chmod 777 /workspace/docs

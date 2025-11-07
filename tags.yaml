@@ -14,3 +14,25 @@
   notes:
     - "Fonts: DejaVu + Cairo defaults for Jupyter"
     - "IRkernel registered system-wide"
+
+- version: 1.1.0
+  date: 2025-11-07
+  base: pytorch/pytorch:2.9.0-cuda12.8-cudnn9-devel
+  python:
+    - scanpy[dask,leiden]==1.11.5
+    - scvi-tools[cuda,autotune,parallel,interpretability,dataloaders]==1.4.0.post1
+    - squidpy[interactive]==1.6.5
+    - spatialdata[extra]==0.5.0
+    - bbknn, leidenalg, scikit-misc, scib, scib-metrics
+    - scarches, celltypist, scvelo, harmonypy
+    - decoupler, pertpy, liana, spatialde, tangram-sc, cellxgene-census
+  r:
+    - R 4.4 (CRAN jammy)
+    - Seurat v5.3.0, SeuratObject (patched), seurat-wrappers, seurat-disk, azimuth, seurat-data, signac
+    - rhdf5 (Bioc), BPCells (source), Monocle3 (GitHub), anndataR, IRkernel, harmony, CellChat, kBET
+  notes:
+    - "Base upgraded: PyTorch 2.9.0 + CUDA 12.8"
+    - "Updated scanpy and scvi-tools to latest versions, better dask support"
+    - "Added code-server (VSCode in browser)"
+    - "Fonts: DejaVu + Cairo defaults for Jupyter"
+    - "IRkernel and Jupyter kernel registered system-wide"

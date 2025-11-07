@@ -10,19 +10,19 @@ See [`tags.yaml`](./tags.yaml) for published versions.
 **Docker Hub**
 ```bash
 export DOCKERHUB_USER=abidabrar
-./build.sh 1.0.0 dockerhub
+./build.sh 1.1.0 dockerhub
 ```
 
 **GitHub Container Registry (GHCR)**
 ```bash
 export GH_USER=abidabrar-bracu
 # login once: echo $GH_TOKEN | docker login ghcr.io -u $GH_USER --password-stdin
-./build.sh 1.0.0 ghcr
+./build.sh 1.1.0 ghcr
 ```
 
 **Local Build**
 ```bash
-./build.sh 1.0.0 local
+./build.sh 1.1.0 local
 ```
 ---
 # Use locally (Docker)
@@ -31,7 +31,7 @@ export GH_USER=abidabrar-bracu
 docker run --gpus all -it \
   -p 8888:8888 \
   -v "$PWD":/workspace -w /workspace \
-  abidabrar/scanalysis-base:1.0.0
+  abidabrar/scanalysis-base:1.1.0
 
   # then inside:
   # jupyter lab --ip=0.0.0.0 --no-browser --port=8888
@@ -42,7 +42,7 @@ docker run --gpus all -it \
   -p 8888:8888 \
   -v /path/to/code:/workspace -w /workspace \
   -v /path/to/data:/workspace/data \
-  abidabrar/scanalysis-base:1.0.0
+  abidabrar/scanalysis-base:1.1.0
 ```
 > [!NOTE]  
 > The image creates /workspace and assigns it to the non-root vscode user for consistent write access.
@@ -74,7 +74,7 @@ cd /path/to/project
 singularity exec --nv \
   -B $PWD:/workspace \
   -B /path/to/data:/workspace/data \
-  scanalysis-base_1.0.0.sif \
+  scanalysis-base_1.1.0.sif \
   bash
  
 # Now you'are inside the container:
@@ -135,7 +135,7 @@ ssh -L 8888:compute-1-23:8888 USER@hpc.login.address
 #SBATCH --error=jupyter-%J.log
 
 PORT=8888
-SIF="/mount/${USER}/containers/scanalysis-base_1.0.0.sif"
+SIF="/mount/${USER}/containers/scanalysis-base_1.1.0.sif"
 WORKDIR=/path/to/code
 
 source ~/.bashrc
@@ -158,7 +158,7 @@ sbatch jupyter.sbatch
 
 ---
 # Notes
-- Torch: 2.4.1 + CUDA 12.1
+- Torch: 2.9 + CUDA 12.8
 - R: CRAN 4.4 (Ubuntu Jammy)
 - Python: scanpy, scvi-tools, squidpy, spatialdata, etc.
 - R: Seurat (v5.3.0), SeuratObject, seurat-wrappers, Monocle 3, BPCells, anndataR, etc
